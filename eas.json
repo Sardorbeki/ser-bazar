@@ -1,0 +1,32 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "EXPO_PUBLIC_DOMAIN": "ser-bazar--sardorbeki937.replit.app"
+        }
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "apk",
+        "env": {
+          "EXPO_PUBLIC_DOMAIN": "ser-bazar--sardorbeki937.replit.app"
+        }
+      },
+      "ios": {
+        "env": {
+          "EXPO_PUBLIC_DOMAIN": "ser-bazar--sardorbeki937.replit.app"
+        }
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
