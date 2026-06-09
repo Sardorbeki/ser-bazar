@@ -12,9 +12,15 @@ export function getApiUrl(): string {
     throw new Error("EXPO_PUBLIC_DOMAIN is not set");
   }
 
-  let url = new URL(`https://${host}`);
+  // localhost:5000 — portni saqlaymiz
+  // Replit/remote URL larda port yo'q (HTTPS 443 orqali proxy qilinadi)
+  const isLocalhost =
+    host.startsWith("localhost") || host.startsWith("127.0.0.1");
+  if (!isLocalhost && host.includes(":")) {
+    host = host.split(":")[0];
+  }
 
-  return url.href;
+  return new URL(`https://${host}`).href;
 }
 
 async function throwIfResNotOk(res: Response) {
