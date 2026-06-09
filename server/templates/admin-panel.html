@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ser Bazar - Admin Panel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --primary: #22C55E;
+    --primary-dark: #16A34A;
+    --navy: #0F2244;
+    --bg: #061408;
+    --surface: #0A2010;
+    --surface2: #0F2A18;
+    --border: #14532D;
+    --text: #F0FFF4;
+    --text2: #86EFAC;
+    --text3: #4A6A5A;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --accent: #4ADE80;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .logo-text { font-size: 18px; font-weight: 700; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge { background: var(--primary); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge.danger { background: var(--danger); }
+  .layout { display: flex; min-height: calc(100vh - 64px); }
+  .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; flex-shrink: 0; }
+  .nav-section { margin-bottom: 8px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 16px; margin-bottom: 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; border-radius: 0; transition: background 0.15s; color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; }
+  .nav-item:hover, .nav-item.active { background: rgba(34,197,94,0.12); color: var(--primary); border-left: 3px solid var(--primary); padding-left: 13px; }
+  .nav-item .icon { width: 20px; text-align: center; }
+  .main { flex: 1; padding: 24px; overflow: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-title { font-size: 24px; font-weight: 700; }
+  .page-sub { font-size: 14px; color: var(--text3); margin-top: 4px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; }
+  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { background: rgba(34,197,94,0.1); color: var(--primary); border: 1px solid rgba(34,197,94,0.3); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .stat-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+  .stat-val { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .stat-trend { font-size: 11px; margin-top: 6px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+  .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px; border-bottom: 1px solid rgba(20,83,45,0.3); font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(34,197,94,0.04); }
+  .chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .chip-green { background: rgba(34,197,94,0.15); color: var(--primary); }
+  .chip-red { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .chip-yellow { background: rgba(245,158,11,0.15); color: var(--warning); }
+  .chip-blue { background: rgba(59,130,246,0.15); color: #3B82F6; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+  .form-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 14px; outline: none; }
+  .form-input:focus { border-color: var(--primary); }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; width: 90%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { font-size: 18px; font-weight: 700; }
+  .close-btn { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); border: none; color: var(--text); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .avatar { width: 36px; height: 36px; border-radius: 18px; background: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+  .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(20,83,45,0.3); }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-info { flex: 1; }
+  .setting-label { font-size: 14px; font-weight: 600; }
+  .setting-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .toggle { width: 46px; height: 26px; background: var(--border); border-radius: 13px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; padding: 2px; position: relative; }
+  .toggle.on { background: var(--primary); }
+  .toggle-knob { width: 22px; height: 22px; background: #fff; border-radius: 11px; transition: transform 0.2s; }
+  .toggle.on .toggle-knob { transform: translateX(20px); }
+  input[type="range"] { width: 100%; accent-color: var(--primary); }
+  .empty-state { text-align: center; padding: 60px 20px; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { color: var(--text3); font-size: 14px; }
+  .user-row { display: flex; align-items: center; gap: 12px; }
+  .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(20,83,45,0.3); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--primary); margin-top: 6px; flex-shrink: 0; }
+  .activity-text { font-size: 13px; color: var(--text2); }
+  .activity-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🛒</div>
+    <div>
+      <div class="logo-text">Ser Bazar</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge">Admin</span>
+    <span style="color:var(--text3);font-size:13px">serbazar</span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Asosiy</div>
+      <a class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a class="nav-item" onclick="showPage('orders')">
+        <span class="icon">📋</span> Buyurtmalar
+      </a>
+      <a class="nav-item" onclick="showPage('products')">
+        <span class="icon">📦</span> Mahsulotlar
+      </a>
+      <a class="nav-item" onclick="showPage('clients')">
+        <span class="icon">👥</span> Klientlar
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Boshqaruv</div>
+      <a class="nav-item" onclick="showPage('warehouse')">
+        <span class="icon">🏭</span> Ombor
+      </a>
+      <a class="nav-item" onclick="showPage('payments')">
+        <span class="icon">💳</span> To'lovlar
+      </a>
+      <a class="nav-item" onclick="showPage('settings')">
+        <span class="icon">⚙️</span> Sozlamalar
+      </a>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Bugungi holat · <span id="today-date"></span></div>
+        </div>
+        <button class="btn btn-primary" onclick="refreshData()">🔄 Yangilash</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15)">📦</div>
+          <div class="stat-val" id="stat-products">—</div>
+          <div class="stat-label">Jami mahsulotlar</div>
+          <div class="stat-trend" style="color:var(--primary)">aktiv mahsulotlar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(59,130,246,0.15)">📋</div>
+          <div class="stat-val" id="stat-orders">—</div>
+          <div class="stat-label">Buyurtmalar</div>
+          <div class="stat-trend" style="color:var(--accent)">jami</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15)">👥</div>
+          <div class="stat-val" id="stat-clients">—</div>
+          <div class="stat-label">Klientlar</div>
+          <div class="stat-trend" style="color:var(--warning)">ro'yxatdan o'tgan</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(239,68,68,0.15)">⚠️</div>
+          <div class="stat-val" id="stat-lowstock">—</div>
+          <div class="stat-label">Kam qoldiq</div>
+          <div class="stat-trend" style="color:var(--danger)">20 dan kam</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-title">📋 So'nggi buyurtmalar</div>
+          <table>
+            <thead><tr><th>Buyurtma</th><th>Klient</th><th>Summa</th><th>Holat</th></tr></thead>
+            <tbody id="recent-orders"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">🕐 Faoliyat</div>
+          <div id="activity-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="page-orders" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Buyurtmalar</div>
+          <div class="page-sub">Barcha buyurtmalar ro'yxati</div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Raqam</th><th>Klient</th><th>Agent</th><th>Summa</th><th>To'lov</th><th>Holat</th><th>Sana</th></tr></thead>
+          <tbody id="orders-table"></tbody>
+        </table>
+        <div id="orders-empty" class="empty-state" style="display:none">
+          <div class="icon">📋</div>
+          <p>Buyurtmalar yo'q</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="page-products" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Mahsulotlar</div>
+          <div class="page-sub">Ombordagi mahsulotlar ro'yxati</div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Rasm</th><th>Nom</th><th>SKU</th><th>Narx</th><th>Qoldiq</th><th>Kategoriya</th><th>Holat</th></tr></thead>
+          <tbody id="products-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="page-clients" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Klientlar</div>
+          <div class="page-sub">Ilovada ro'yxatdan o'tgan klientlar</div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Klient</th><th>Login</th><th>Telefon</th><th>Ro'yxat sanasi</th></tr></thead>
+          <tbody id="clients-table"></tbody>
+        </table>
+        <div id="clients-empty" class="empty-state" style="display:none">
+          <div class="icon">👥</div>
+          <p>Klientlar hali yo'q</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WAREHOUSE -->
+    <div id="page-warehouse" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Ombor</div>
+          <div class="page-sub">Tovar harakatlari</div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15)">↓</div>
+          <div class="stat-val" id="stat-in">—</div>
+          <div class="stat-label">Prixod (kirdi)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(239,68,68,0.15)">↑</div>
+          <div class="stat-val" id="stat-out">—</div>
+          <div class="stat-label">Chiqim (chiqdi)</div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Tur</th><th>Mahsulot</th><th>Miqdor</th><th>Narx</th><th>Jami</th><th>Izoh</th><th>Sana</th></tr></thead>
+          <tbody id="warehouse-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div id="page-payments" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">To'lovlar</div>
+          <div class="page-sub">Barcha to'lovlar tarixi</div>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Klient</th><th>Miqdor</th><th>Usul</th><th>Buyurtma</th><th>Sana</th></tr></thead>
+          <tbody id="payments-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="page-settings" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Sozlamalar</div>
+          <div class="page-sub">Tizim sozlamalari</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚙️ Asosiy sozlamalar</div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Minimal buyurtma summasi</div>
+            <div class="setting-sub">Bu summadan past buyurtma qabul qilinmaydi</div>
+          </div>
+          <div id="min-order-value" style="font-size:18px;font-weight:700;color:var(--primary)">—</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Lokatsiya nazorati</div>
+            <div class="setting-sub">Hududdan tashqarida buyurtma cheklovi</div>
+          </div>
+          <div id="location-status" class="chip chip-green">—</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Lokatsiya radiusi</div>
+            <div class="setting-sub">Ruxsat berilgan hudud radiusi</div>
+          </div>
+          <div id="location-radius" style="font-size:16px;font-weight:600;color:var(--text2)">—</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Ro'yxatdan o'tgan klientlar</div>
+            <div class="setting-sub">Ilovada akkaunt yaratgan foydalanuvchilar</div>
+          </div>
+          <div id="clients-count" style="font-size:18px;font-weight:700;color:var(--accent)">—</div>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px">📱 Sozlamalarni o'zgartirish uchun mobil ilovani oching:</div>
+          <div style="font-size:13px;color:var(--text2)">Sozlamalar → Admin paneli → Minimal buyurtma / Lokatsiya</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔗 Regos integratsiya</div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Gateway URL</div>
+            <div class="setting-sub" style="font-family:monospace;font-size:11px">https://integration.regos.uz/gateway/out/226baa0399ae43bba261165a4d4de611</div>
+          </div>
+          <span class="chip chip-green">Ulangan</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEYS = {
+    products: 'products',
+    orders: 'orders',
+    customers: 'customers',
+    agents: 'agents',
+    warehouse: 'warehouse',
+    payments: 'payments',
+    app_settings: 'app_settings',
+    client_users: 'client_users',
+  };
+
+  function getData(key) {
+    try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; }
+  }
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    loadPage(name);
+  }
+
+  function loadPage(name) {
+    switch(name) {
+      case 'dashboard': loadDashboard(); break;
+      case 'orders': loadOrders(); break;
+      case 'products': loadProducts(); break;
+      case 'clients': loadClients(); break;
+      case 'warehouse': loadWarehouse(); break;
+      case 'payments': loadPayments(); break;
+      case 'settings': loadSettings(); break;
+    }
+  }
+
+  function orderStatusLabel(s) {
+    const map = { draft:'Loyiha', confirmed:'Tasdiqlangan', shipped:'Yo\'lda', delivered:'Yetkazildi', cancelled:'Bekor' };
+    const cls = { draft:'chip-blue', confirmed:'chip-green', shipped:'chip-yellow', delivered:'chip-green', cancelled:'chip-red' };
+    return `<span class="chip ${cls[s]||'chip-blue'}">${map[s]||s}</span>`;
+  }
+  function payStatusLabel(s) {
+    const map = { unpaid:'To\'lanmagan', partial:'Qisman', paid:'To\'liq' };
+    const cls = { unpaid:'chip-red', partial:'chip-yellow', paid:'chip-green' };
+    return `<span class="chip ${cls[s]||'chip-red'}">${map[s]||s}</span>`;
+  }
+
+  function loadDashboard() {
+    const products = getData('products') || [];
+    const orders = getData('orders') || [];
+    const clientUsers = getData('client_users') || [];
+    const warehouse = getData('warehouse') || [];
+
+    document.getElementById('stat-products').textContent = products.length;
+    document.getElementById('stat-orders').textContent = orders.length;
+    document.getElementById('stat-clients').textContent = clientUsers.length;
+    document.getElementById('stat-lowstock').textContent = products.filter(p => p.stock < 20).length;
+
+    const recentOrdersHtml = orders.slice(-5).reverse().map(o =>
+      `<tr><td><b>${o.number}</b></td><td>${o.customerName}</td><td>${(o.total||0).toLocaleString()} UZS</td><td>${orderStatusLabel(o.status)}</td></tr>`
+    ).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3)">Buyurtmalar yo\'q</td></tr>';
+    document.getElementById('recent-orders').innerHTML = recentOrdersHtml;
+
+    const activities = [
+      ...orders.slice(-3).map(o => ({ text: `Buyurtma #${o.number} — ${o.customerName}`, time: o.createdAt, dot: '#22C55E' })),
+      ...warehouse.filter(w=>w.type==='in').slice(-2).map(w => ({ text: `Prixod: ${w.productName} +${w.qty}`, time: w.createdAt, dot: '#4ADE80' })),
+    ].sort((a,b) => b.time?.localeCompare(a.time||'')).slice(0,6);
+
+    document.getElementById('activity-list').innerHTML = activities.map(a =>
+      `<div class="activity-item"><div class="activity-dot" style="background:${a.dot}"></div><div><div class="activity-text">${a.text}</div><div class="activity-time">${a.time||''}</div></div></div>`
+    ).join('') || '<div class="empty-state"><p>Faoliyat yo\'q</p></div>';
+  }
+
+  function loadOrders() {
+    const orders = getData('orders') || [];
+    const tbody = document.getElementById('orders-table');
+    const empty = document.getElementById('orders-empty');
+    if (!orders.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = orders.slice().reverse().map(o =>
+      `<tr>
+        <td><b>${o.number}</b></td>
+        <td>${o.customerName}</td>
+        <td>${o.agentName||'—'}</td>
+        <td>${(o.total||0).toLocaleString()} UZS</td>
+        <td>${payStatusLabel(o.paymentStatus)}</td>
+        <td>${orderStatusLabel(o.status)}</td>
+        <td>${o.createdAt}</td>
+      </tr>`
+    ).join('');
+  }
+
+  function loadProducts() {
+    const products = getData('products') || [];
+    document.getElementById('products-table').innerHTML = products.map(p => {
+      const stockStatus = p.stock === 0 ? 'chip-red' : p.stock < 20 ? 'chip-yellow' : 'chip-green';
+      const stockLabel = p.stock === 0 ? 'Tugagan' : p.stock < 20 ? 'Kam' : 'Yetarli';
+      return `<tr>
+        <td>${p.image ? `<img src="${p.image}" style="width:36px;height:36px;border-radius:8px;object-fit:cover">` : '<div style="width:36px;height:36px;border-radius:8px;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center">📦</div>'}</td>
+        <td><b>${p.name}</b></td>
+        <td style="font-family:monospace;font-size:12px">${p.sku}</td>
+        <td>${(p.price||0).toLocaleString()} UZS</td>
+        <td><b>${p.stock}</b> ${p.unit}</td>
+        <td>${p.category}</td>
+        <td><span class="chip ${stockStatus}">${stockLabel}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function loadClients() {
+    const clientUsers = getData('client_users') || [];
+    const tbody = document.getElementById('clients-table');
+    const empty = document.getElementById('clients-empty');
+    if (!clientUsers.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = clientUsers.map(u =>
+      `<tr>
+        <td><div class="user-row"><div class="avatar">${(u.name||'?')[0].toUpperCase()}</div><b>${u.name}</b></div></td>
+        <td>@${u.username}</td>
+        <td>${u.phone||'—'}</td>
+        <td>${u.createdAt||'—'}</td>
+      </tr>`
+    ).join('');
+  }
+
+  function loadWarehouse() {
+    const warehouse = getData('warehouse') || [];
+    const inMoves = warehouse.filter(w=>w.type==='in');
+    const outMoves = warehouse.filter(w=>w.type==='out');
+    document.getElementById('stat-in').textContent = inMoves.length;
+    document.getElementById('stat-out').textContent = outMoves.length;
+    document.getElementById('warehouse-table').innerHTML = warehouse.slice().reverse().map(w =>
+      `<tr>
+        <td><span class="chip ${w.type==='in'?'chip-green':'chip-red'}">${w.type==='in'?'↓ Kirdi':'↑ Chiqdi'}</span></td>
+        <td>${w.productName}</td>
+        <td><b>${w.qty}</b> ${w.unit}</td>
+        <td>${(w.price||0).toLocaleString()} UZS</td>
+        <td>${(w.total||0).toLocaleString()} UZS</td>
+        <td>${w.note||'—'}</td>
+        <td>${w.createdAt}</td>
+      </tr>`
+    ).join('');
+  }
+
+  function loadPayments() {
+    const payments = getData('payments') || [];
+    const methodLabel = { cash:'Naqd', card:'Karta', transfer:'O\'tkazma' };
+    document.getElementById('payments-table').innerHTML = payments.slice().reverse().map(p =>
+      `<tr>
+        <td><b>${p.customerName}</b></td>
+        <td><b>${(p.amount||0).toLocaleString()} UZS</b></td>
+        <td><span class="chip chip-blue">${methodLabel[p.method]||p.method}</span></td>
+        <td>${p.orderId||'—'}</td>
+        <td>${p.createdAt}</td>
+      </tr>`
+    ).join('');
+  }
+
+  function loadSettings() {
+    const settings = getData('app_settings');
+    const clientUsers = getData('client_users') || [];
+    document.getElementById('min-order-value').textContent = settings?.minOrderAmount ? (settings.minOrderAmount).toLocaleString() + ' UZS' : '0 UZS';
+    document.getElementById('location-status').textContent = settings?.locationSettings?.enabled ? 'Yoqilgan' : 'O\'chirilgan';
+    document.getElementById('location-status').className = 'chip ' + (settings?.locationSettings?.enabled ? 'chip-green' : 'chip-red');
+    document.getElementById('location-radius').textContent = settings?.locationSettings?.radius ? settings.locationSettings.radius + ' km' : '—';
+    document.getElementById('clients-count').textContent = clientUsers.length;
+  }
+
+  function refreshData() {
+    loadDashboard();
+    alert('Ma\'lumotlar yangilandi!');
+  }
+
+  // Init
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('uz-UZ');
+  loadDashboard();
+</script>
+</body>
+</html>
