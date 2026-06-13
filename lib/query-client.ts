@@ -1,25 +1,23 @@
 import { fetch } from "expo/fetch";
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-/**
- * Gets the base URL for the Express API server (e.g., "http://localhost:3000")
- * @returns {string} The API base URL
- */
+let runtimeApiUrl: string | null = null;
+
+export function setRuntimeApiUrl(url: string) {
+  runtimeApiUrl = url.endsWith("/") ? url : url + "/";
+}
+
 export function getApiUrl(): string {
+  if (runtimeApiUrl) return runtimeApiUrl;
+
   let host = process.env.EXPO_PUBLIC_DOMAIN;
+  if (!host) throw new Error("EXPO_PUBLIC_DOMAIN is not set");
 
-  if (!host) {
-    throw new Error("EXPO_PUBLIC_DOMAIN is not set");
-  }
-
-  // localhost:5000 — portni saqlaymiz
-  // Replit/remote URL larda port yo'q (HTTPS 443 orqali proxy qilinadi)
   const isLocalhost =
     host.startsWith("localhost") || host.startsWith("127.0.0.1");
   if (!isLocalhost && host.includes(":")) {
     host = host.split(":")[0];
   }
-
   return new URL(`https://${host}`).href;
 }
 
