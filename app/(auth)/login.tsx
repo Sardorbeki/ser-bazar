@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useApp } from "@/contexts/AppContext";
 
 export default function LoginScreen() {
-  const { login, isAuthenticated, user } = useApp();
+  const { login, isAuthenticated, user, serverUrl, saveServerUrl } = useApp();
   const insets = useSafeAreaInsets();
 
   const [username, setUsername] = useState("");
@@ -19,6 +19,12 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showServerSettings, setShowServerSettings] = useState(false);
+  const [serverInput, setServerInput] = useState("");
+
+  useEffect(() => {
+    if (serverUrl) setServerInput(serverUrl);
+  }, [serverUrl]);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -35,6 +41,9 @@ export default function LoginScreen() {
     if (!username.trim() || !password.trim()) {
       setError("Login va parolni kiriting");
       return;
+    }
+    if (serverInput.trim()) {
+      await saveServerUrl(serverInput.trim());
     }
     setLoading(true);
     try {
@@ -125,6 +134,42 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
+          <Pressable
+            style={styles.serverToggle}
+            onPress={() => setShowServerSettings((v) => !v)}
+          >
+            <Ionicons name="settings-outline" size={14} color="rgba(134,239,172,0.4)" />
+            <Text style={styles.serverToggleText}>Server sozlamalari</Text>
+            <Ionicons
+              name={showServerSettings ? "chevron-up" : "chevron-down"}
+              size={14}
+              color="rgba(134,239,172,0.4)"
+            />
+          </Pressable>
+
+          {showServerSettings && (
+            <View style={styles.serverCard}>
+              <Text style={styles.serverLabel}>Server URL</Text>
+              <View style={styles.serverInputWrap}>
+                <Ionicons name="globe-outline" size={16} color="#86EFAC" style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { flex: 1, fontSize: 13 }]}
+                  value={serverInput}
+                  onChangeText={setServerInput}
+                  placeholder="https://yourserver.replit.app"
+                  placeholderTextColor="#4A6A5A"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </View>
+              <Text style={styles.serverHint}>
+                Replit dev server: https://domain.replit.dev{"\n"}
+                Production: https://yourapp.replit.app
+              </Text>
+            </View>
+          )}
+
           <Text style={styles.footer}>Ser Bazar v1.0 · regos.online integratsiyasi</Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -153,5 +198,11 @@ const styles = StyleSheet.create({
   registerLink: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   registerLinkText: { fontSize: 14, fontFamily: "Inter_400Regular", color: "#86EFAC", opacity: 0.7 },
   registerLinkBold: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#22C55E" },
-  footer: { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(134,239,172,0.3)", marginTop: 32, textAlign: "center" },
+  serverToggle: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 20, paddingVertical: 8 },
+  serverToggleText: { fontSize: 12, fontFamily: "Inter_400Regular", color: "rgba(134,239,172,0.4)" },
+  serverCard: { width: "100%", backgroundColor: "rgba(10,32,16,0.8)", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "rgba(20,83,45,0.5)", marginTop: 4 },
+  serverLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#86EFAC", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, opacity: 0.6 },
+  serverInputWrap: { flexDirection: "row", alignItems: "center", backgroundColor: "#061408", borderRadius: 10, borderWidth: 1, borderColor: "#14532D", paddingHorizontal: 12, height: 44 },
+  serverHint: { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(134,239,172,0.35)", marginTop: 8, lineHeight: 16 },
+  footer: { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(134,239,172,0.3)", marginTop: 24, textAlign: "center" },
 });
