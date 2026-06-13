@@ -10,15 +10,13 @@ export function setRuntimeApiUrl(url: string) {
 export function getApiUrl(): string {
   if (runtimeApiUrl) return runtimeApiUrl;
 
-  let host = process.env.EXPO_PUBLIC_DOMAIN;
+  const host = process.env.EXPO_PUBLIC_DOMAIN;
   if (!host) throw new Error("EXPO_PUBLIC_DOMAIN is not set");
 
   const isLocalhost =
     host.startsWith("localhost") || host.startsWith("127.0.0.1");
-  if (!isLocalhost && host.includes(":")) {
-    host = host.split(":")[0];
-  }
-  return new URL(`https://${host}`).href;
+  const protocol = isLocalhost ? "http" : "https";
+  return new URL(`${protocol}://${host}`).href;
 }
 
 async function throwIfResNotOk(res: Response) {
