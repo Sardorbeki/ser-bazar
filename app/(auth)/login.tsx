@@ -164,7 +164,7 @@ export default function LoginScreen() {
                 />
               </View>
               <Text style={styles.serverHint}>
-                Replit dev server: https://domain.replit.dev{"\n"}
+                Dev server (DB bilan): https://domain.replit.dev:5000{"\n"}
                 Production: https://yourapp.replit.app
               </Text>
             </View>
