@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { storageGet, storageSet, storageRemove, KEYS } from "@/lib/storage";
 import { regosApi, RegosCreds } from "@/lib/regos";
-import { apiRequest, getApiUrl } from "@/lib/query-client";
+import { apiRequest, getApiUrl, setRuntimeApiUrl } from "@/lib/query-client";
 import { fetch } from "expo/fetch";
 
 export interface User {
@@ -152,6 +152,9 @@ interface AppContextValue {
   payments: Payment[];
   clientUsers: ClientUser[];
 
+  serverUrl: string;
+  saveServerUrl: (url: string) => Promise<void>;
+
   login: (username: string, password: string, baseUrl?: string) => Promise<void>;
   register: (name: string, username: string, phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -259,6 +262,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [appSettings, setAppSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [clientUsers, setClientUsers] = useState<ClientUser[]>([]);
+  const [serverUrl, setServerUrlState] = useState<string>("");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -267,17 +271,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [warehouseMovements, setWarehouseMovements] = useState<WarehouseMovement[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
 
+  const saveServerUrl = async (url: string) => {
+    const cleaned = url.trim();
+    if (cleaned) {
+      setRuntimeApiUrl(cleaned);
+      setServerUrlState(cleaned);
+      await storageSet(KEYS.SERVER_URL, cleaned);
+    }
+  };
+
   // Load from storage on mount, then fetch from API
   useEffect(() => {
     (async () => {
       try {
-        const [savedUser, savedToken, savedCreds, savedSettings, savedClientUsers] = await Promise.all([
+        const [savedUser, savedToken, savedCreds, savedSettings, savedClientUsers, savedServerUrl] = await Promise.all([
           storageGet<User>(KEYS.USER),
           storageGet<string>("auth_token_jwt"),
           storageGet<RegosCreds>(KEYS.AUTH_TOKEN),
           storageGet<AppSettings>(KEYS.APP_SETTINGS),
           storageGet<ClientUser[]>(KEYS.CLIENT_USERS),
+          storageGet<string>(KEYS.SERVER_URL),
         ]);
+
+        if (savedServerUrl) {
+          setRuntimeApiUrl(savedServerUrl);
+          setServerUrlState(savedServerUrl);
+        }
 
         if (savedUser) setUser(savedUser);
         if (savedToken) setAuthToken(savedToken);
@@ -580,13 +599,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     user, isAuthenticated: !!user, isLoading, authToken, creds, appSettings,
     locationSettings: appSettings.locationSettings,
     products, customers, agents, orders, warehouseMovements, payments, clientUsers,
+    serverUrl, saveServerUrl,
     login, register, logout, updateCurrentUser, refreshData, setAppSettings,
     addProduct, updateProduct, deleteProduct,
     addCustomer, updateCustomer, deleteCustomer,
     addAgent, updateAgent, deleteAgent,
     addOrder, updateOrder, deleteOrder,
     addWarehouseMovement, addPayment,
-  }), [user, isLoading, authToken, creds, appSettings, products, customers, agents, orders, warehouseMovements, payments, clientUsers]);
+  }), [user, isLoading, authToken, creds, appSettings, products, customers, agents, orders, warehouseMovements, payments, clientUsers, serverUrl]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
