@@ -34,4 +34,5 @@ export const KEYS = {
   LOCATION_SETTINGS: "location_settings",
   APP_SETTINGS: "app_settings",
   CLIENT_USERS: "client_users",
+  SERVER_URL: "server_url",
 };
